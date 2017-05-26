@@ -93,7 +93,7 @@ class Seq2SeqModel(object):
       self.learning_rate_decay_op = self.learning_rate.assign(
           self.learning_rate * learning_rate_decay_factor)
       self.global_step = tf.Variable(0, trainable=False)
-      self.dummy_dialogs = [] # [TODO] load dummy sentences 
+      self.dummy_dialogs = [] # [TODO] load dummy sentences
 
       # If we use sampled softmax, we need an output projection.
       output_projection = None
@@ -112,6 +112,9 @@ class Seq2SeqModel(object):
           local_w_t = tf.cast(w_t, tf.float32)
           local_b = tf.cast(b, tf.float32)
           local_inputs = tf.cast(inputs, tf.float32)
+          # Sampled_softmax_loss:
+          #     Computes and returns the sampled softmax training loss.
+          #     This is a faster way to train a softmax classifier over a huge number of classes.
           return tf.cast(
               tf.nn.sampled_softmax_loss(
                   weights=local_w_t,
@@ -136,8 +139,8 @@ class Seq2SeqModel(object):
       # The seq2seq function: we use embedding for the input and attention.
       def seq2seq_f(encoder_inputs, decoder_inputs, feed_previous):
         return tf_seq2seq.embedding_attention_seq2seq(
-            encoder_inputs, 
-            decoder_inputs, 
+            encoder_inputs,
+            decoder_inputs,
             cell,
             num_encoder_symbols=source_vocab_size,
             num_decoder_symbols=target_vocab_size,
@@ -190,7 +193,7 @@ class Seq2SeqModel(object):
       # # Training outputs and losses.
       # self.outputs, self.losses, self.encoder_state = tf_seq2seq.model_with_buckets(
       #     self.encoder_inputs, self.decoder_inputs, targets,
-      #     self.target_weights, buckets, 
+      #     self.target_weights, buckets,
       #     lambda x, y: seq2seq_f(x, y, tf.where(self.force_dec_input, False, True)),
       #     softmax_loss_function=softmax_loss_function
       #   )
@@ -205,7 +208,7 @@ class Seq2SeqModel(object):
       #       )
       #       for output in self.outputs[b]
       #   ]
-        
+
       # Gradients and SGD update operation for training the model.
       params = tf.trainable_variables()
       # if not forward_only:
@@ -272,7 +275,7 @@ class Seq2SeqModel(object):
     for l in xrange(decoder_size):
       input_feed[self.decoder_inputs[l].name] = decoder_inputs[l]
       input_feed[self.target_weights[l].name] = target_weights[l]
-    
+
     # Since our targets are decoder inputs shifted by one, we need one more.
     last_target = self.decoder_inputs[decoder_size].name
     input_feed[last_target] = np.zeros([self.batch_size], dtype=np.int32)
@@ -284,7 +287,7 @@ class Seq2SeqModel(object):
                      self.gradient_norms[bucket_id],  # Gradient norm.
                      self.losses[bucket_id]]  # Loss for this batch.
     else:
-      output_feed = [self.encoder_state[bucket_id], 
+      output_feed = [self.encoder_state[bucket_id],
                      self.losses[bucket_id]]  # Loss for this batch.
       for l in xrange(decoder_size):  # Output logits.
         output_feed.append(self.outputs[bucket_id][l])
@@ -316,13 +319,13 @@ class Seq2SeqModel(object):
 
   def step_rf(self, args, session, encoder_inputs, decoder_inputs, target_weights,
            bucket_id, rev_vocab=None, debug=True):
-    
-    # initialize 
+
+    # initialize
     init_inputs = [encoder_inputs, decoder_inputs, target_weights, bucket_id]
     sent_max_length = args.buckets[-1][0]
     resp_tokens, resp_txt = self.logits2tokens(encoder_inputs, rev_vocab, sent_max_length, reverse=True)
     if debug: print("[INPUT]:", resp_txt)
-    
+
     # Initialize
     ep_rewards, ep_step_loss, enc_states = [], [], []
     ep_encoder_inputs, ep_target_weights, ep_bucket_id = [], [], []
@@ -332,7 +335,7 @@ class Seq2SeqModel(object):
       #----[Step]----------------------------------------
       encoder_state, step_loss, output_logits = self.step(session, encoder_inputs, decoder_inputs, target_weights,
                           bucket_id, training=False, force_dec_input=False)
-      
+
       # memorize inputs for reproducing curriculum with adjusted losses
       ep_encoder_inputs.append(encoder_inputs)
       ep_target_weights.append(target_weights)
@@ -340,7 +343,7 @@ class Seq2SeqModel(object):
       ep_step_loss.append(step_loss)
       enc_states_vec = np.reshape(np.squeeze(encoder_state, axis=1), (-1))
       enc_states.append(enc_states_vec)
-      
+
       # process response
       resp_tokens, resp_txt = self.logits2tokens(output_logits, rev_vocab, sent_max_length)
       if debug: print("[RESP]: (%.4f) %s" % (step_loss, resp_txt))
@@ -349,12 +352,12 @@ class Seq2SeqModel(object):
       bucket_id = min([b for b in range(len(args.buckets)) if args.buckets[b][0] > len(resp_tokens)])
       feed_data = {bucket_id: [(resp_tokens, [])]}
       encoder_inputs, decoder_inputs, target_weights = self.get_batch(feed_data, bucket_id)
-      
+
       #----[Reward]----------------------------------------
       # r1: Ease of answering
       r1 = [self.logProb(session, args.buckets, resp_tokens, d) for d in self.dummy_dialogs]
       r1 = -np.mean(r1) if r1 else 0
-      
+
       # r2: Information Flow
       if len(enc_states) < 2:
         r2 = 0
@@ -362,7 +365,7 @@ class Seq2SeqModel(object):
         vec_a, vec_b = enc_states[-2], enc_states[-1]
         r2 = sum(vec_a*vec_b) / sum(abs(vec_a)*abs(vec_b))
         r2 = -log(r2)
-      
+
       # r3: Semantic Coherence
       r3 = -self.logProb(session, args.buckets, resp_tokens, ep_encoder_inputs[-1])
 
@@ -370,15 +373,15 @@ class Seq2SeqModel(object):
       R = 0.25*r1 + 0.25*r2 + 0.5*r3
       rewards.append(R)
       #----------------------------------------------------
-      if (resp_txt in self.dummy_dialogs) or (len(resp_tokens) <= 3) or (encoder_inputs in ep_encoder_inputs): 
+      if (resp_txt in self.dummy_dialogs) or (len(resp_tokens) <= 3) or (encoder_inputs in ep_encoder_inputs):
         break # check if dialog ended
-      
+
     # gradient decent according to batch rewards
     rto = (max(ep_step_loss) - min(ep_step_loss)) / (max(ep_rewards) - min(ep_rewards))
     advantage = [mp.mean(ep_rewards)*rto] * len(args.buckets)
     _, step_loss, _ = self.step(session, init_inputs[0], init_inputs[1], init_inputs[2], init_inputs[3],
               training=True, force_dec_input=False, advantage=advantage)
-    
+
     return None, step_loss, None
 
 
@@ -396,7 +399,7 @@ class Seq2SeqModel(object):
     # step
     _, _, output_logits = self.step(session, encoder_inputs, decoder_inputs, target_weights,
                         bucket_id, training=False, force_dec_input=True)
-    
+
     # p = log(P(b|a)) / N
     p = 1
     for t, logit in zip(tokens_b, output_logits):

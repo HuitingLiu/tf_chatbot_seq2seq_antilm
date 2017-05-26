@@ -70,7 +70,7 @@ def cal_bleu(cands, ref, stopwords=['的', '嗎']):
         bleus.append(bleu)
         print(refs, cand, bleu)
     return np.average(bleus)
-    
+
 
 
 def get_predicted_sentence(args, input_sentence, vocab, rev_vocab, model, sess, debug=False, return_raw=False):
@@ -107,7 +107,7 @@ def get_predicted_sentence(args, input_sentence, vocab, rev_vocab, model, sess, 
     # Get output logits for the sentence.
     beams, new_beams, results = [(1, 0, {'eos': 0, 'dec_inp': decoder_inputs, 'prob': 1, 'prob_ts': 1, 'prob_t': 1})], [], [] # initialize beams as (log_prob, empty_string, eos)
     dummy_encoder_inputs = [np.array([data_utils.PAD_ID]) for _ in range(len(encoder_inputs))]
-    
+
     for dptr in range(len(decoder_inputs)-1):
       if dptr > 0: 
         target_weights[dptr] = [1.]
@@ -115,7 +115,7 @@ def get_predicted_sentence(args, input_sentence, vocab, rev_vocab, model, sess, 
       if debug: print("=====[beams]=====", beams)
       heapq.heapify(beams)  # since we will remove something
       for prob, _, cand in beams:
-        if cand['eos']: 
+        if cand['eos']:
           results += [(prob, 0, cand)]
           continue
 
@@ -138,8 +138,8 @@ def get_predicted_sentence(args, input_sentence, vocab, rev_vocab, model, sess, 
 
         # for debug use
         if return_raw: return all_prob, all_prob_ts, all_prob_t
-        
-        # beam search  
+
+        # beam search
         for c in np.argsort(all_prob)[::-1][:args.beam_size]:
           new_cand = {
             'eos'     : (c == data_utils.EOS_ID),
@@ -149,7 +149,7 @@ def get_predicted_sentence(args, input_sentence, vocab, rev_vocab, model, sess, 
             'prob'    : cand['prob'] * all_prob[c],
           }
           new_cand = (new_cand['prob'], random(), new_cand) # stuff a random to prevent comparing new_cand
-          
+
           try:
             if (len(new_beams) < args.beam_size):
               heapq.heappush(new_beams, new_cand)
@@ -159,7 +159,7 @@ def get_predicted_sentence(args, input_sentence, vocab, rev_vocab, model, sess, 
             print("[Error]", e)
             print("-----[new_beams]-----\n", new_beams)
             print("-----[new_cand]-----\n", new_cand)
-    
+
     results += new_beams  # flush last cands
 
     # post-process results
