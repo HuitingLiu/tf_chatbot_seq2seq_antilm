@@ -46,8 +46,6 @@ def create_model(session, args, forward_only=True):
 
 
 def dict_lookup(rev_vocab, out, beam_size):
-    if beam_size > 1:
-        out = out[0]
     word = rev_vocab[out] if (out < len(rev_vocab)) else data_utils._UNK
     if isinstance(word, bytes):
       word = word.decode()
@@ -167,6 +165,6 @@ def get_predicted_sentence(args, input_sentence, vocab, rev_vocab, model, sess, 
     # post-process results
     res_cands = []
     for prob, _, cand in sorted(results, reverse=True):
-      cand['dec_inp'] = " ".join([dict_lookup(rev_vocab, w, args.beam_size) for w in cand['dec_inp']])
+      cand['dec_inp'] = " ".join([dict_lookup(rev_vocab, w[0]) for w in cand['dec_inp']])
       res_cands.append(cand)
     return res_cands[:args.beam_size]
