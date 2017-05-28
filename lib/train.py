@@ -16,16 +16,16 @@ def setup_workpath(workspace):
 
   data_dir = "%s/data" % (workspace)
   # training data
-  if not os.path.exists("%s/chat.in" % data_dir):
-    n = 0
-    f_zip   = gzip.open("%s/train/chat.txt.gz" % data_dir, 'rt')
-    f_train = open("%s/chat.in" % data_dir, 'w')
-    f_dev   = open("%s/chat_test.in" % data_dir, 'w')
-    for line in f_zip:
-      f_train.write(line)
-      if n < 10000: 
-        f_dev.write(line)
-        n += 1
+  # if not os.path.exists("%s/chat.in" % data_dir):
+  #   n = 0
+  #   f_zip   = gzip.open("%s/train/chat.txt.gz" % data_dir, 'rt')
+  #   f_train = open("%s/chat.in" % data_dir, 'w')
+  #   f_dev   = open("%s/chat_test.in" % data_dir, 'w')
+  #   for line in f_zip:
+  #     f_train.write(line)
+  #     if n < 10000:
+  #       f_dev.write(line)
+  #       n += 1
 
 
 def train(args):
@@ -110,7 +110,7 @@ def train(args):
             # Run evals on development set and print their perplexity.
             for bucket_id in xrange(len(args.buckets)):
               encoder_inputs, decoder_inputs, target_weights = model.get_batch(dev_set, bucket_id)
-              _, eval_loss, _ = model.step(sess, encoder_inputs, decoder_inputs, 
+              _, eval_loss, _ = model.step(sess, encoder_inputs, decoder_inputs,
                                           target_weights, bucket_id, forward_only=True, force_dec_input=False)
 
               eval_ppx = math.exp(eval_loss) if eval_loss < 300 else float('inf')

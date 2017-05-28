@@ -122,7 +122,7 @@ def basic_tokenizer(sentence, en_jieba=False):
         space_separated_fragment = space_separated_fragment.encode()
       words.extend(_WORD_SPLIT.split(space_separated_fragment))
     return [w.lower() for w in words if w]
-  
+
 
 
 def create_vocabulary(vocabulary_path, data_path, max_vocabulary_size,
@@ -361,20 +361,22 @@ def prepare_dialog_data(data_dir, vocabulary_size):
       (3) path to the chat vocabulary file
   """
   # Get dialog data to the specified directory.
+  # train_path: works/example/data/chat
+  # dev_path: works/example/data/chat_test
   train_path = get_dialog_train_set_path(data_dir)
   dev_path = get_dialog_dev_set_path(data_dir)
 
   # Create vocabularies of the appropriate sizes.
   vocab_path = os.path.join(data_dir, "vocab%d.in" % vocabulary_size)
-  create_vocabulary(vocab_path, train_path + ".in", vocabulary_size)
+  #create_vocabulary(vocab_path, train_path + ".in", vocabulary_size)
 
   # Create token ids for the training data.
   train_ids_path = train_path + (".ids%d.in" % vocabulary_size)
-  data_to_token_ids(train_path + ".in", train_ids_path, vocab_path)
+  #data_to_token_ids(train_path + ".in", train_ids_path, vocab_path)
 
   # Create token ids for the development data.
   dev_ids_path = dev_path + (".ids%d.in" % vocabulary_size)
-  data_to_token_ids(dev_path + ".in", dev_ids_path, vocab_path)
+  #data_to_token_ids(dev_path + ".in", dev_ids_path, vocab_path)
 
   return (train_ids_path, dev_ids_path, vocab_path)
 
