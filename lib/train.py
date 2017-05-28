@@ -74,6 +74,10 @@ def train(args):
 
           # Get a batch and make a step.
           start_time = time.time()
+          # In case if the bucket is empty
+          if len(train_set[bucket_id]) == 0:
+              continue
+
           encoder_inputs, decoder_inputs, target_weights = model.get_batch(
               train_set, bucket_id)
 
@@ -109,6 +113,9 @@ def train(args):
 
             # Run evals on development set and print their perplexity.
             for bucket_id in xrange(len(args.buckets)):
+              # In case if the bucket is empty
+              if len(dev_set[bucket_id]) == 0:
+                  continue
               encoder_inputs, decoder_inputs, target_weights = model.get_batch(dev_set, bucket_id)
               _, eval_loss, _ = model.step(sess, encoder_inputs, decoder_inputs,
                                           target_weights, bucket_id, forward_only=True, force_dec_input=False)
