@@ -45,7 +45,15 @@ def params_setup(cmdline=None):
   # We use a number of buckets and pad to the closest one for efficiency.
   # See seq2seq_model.Seq2SeqModel for details of how they work.
   # args.buckets = [(5, 10), (10, 15), (20, 25), (40, 50)]
-  args.buckets = [(0, 20)]
+  #
+  '''
+    buckets: a list of pairs (I, O), where I specifies maximum input length
+      that will be processed in that bucket, and O specifies maximum output
+      length. Training instances that have inputs longer than I or outputs
+      longer than O will be pushed to the next bucket and padded accordingly.
+      We assume that the list is sorted, e.g., [(2, 4), (8, 16)].
+  '''
+  args.buckets = [(20, 20)]
 
   # post-process
   args.workspace = '%s/%s' % (args.work_root, args.model_name)
