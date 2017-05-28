@@ -3,7 +3,7 @@ import argparse
 def params_setup(cmdline=None):
   parser = argparse.ArgumentParser()
   parser.add_argument('--mode', type=str, required=True, help='work mode: train/test/chat')
-  
+
   # path ctrl
   parser.add_argument('--model_name', type=str, default='movie_subtitles_en', help='model name, affects data, model, result save path')
   parser.add_argument('--scope_name', type=str, help='separate namespace, for multi-models working together')
@@ -32,19 +32,20 @@ def params_setup(cmdline=None):
   parser.add_argument('--rev_model', type=int, default=0, help='reverse Q-A pair, for bi-direction model')
   parser.add_argument('--reinforce_learn', type=int, default=0, help='1 to enable reinforcement learning mode')
   parser.add_argument('--en_tfboard', type=int, default=0, help='Enable writing out tensorboard meta data')
-  
+
 
   if cmdline:
     args = parser.parse_args(cmdline)
   else:
     args = parser.parse_args()
-  
+
   if not args.scope_name: args.scope_name = args.model_name
   if args.rev_model: args.model_name += '_bidi' # bi-direction model
-  
+
   # We use a number of buckets and pad to the closest one for efficiency.
   # See seq2seq_model.Seq2SeqModel for details of how they work.
-  args.buckets = [(5, 10), (10, 15), (20, 25), (40, 50)]
+  # args.buckets = [(5, 10), (10, 15), (20, 25), (40, 50)]
+  args.buckets = [(0, 20)]
 
   # post-process
   args.workspace = '%s/%s' % (args.work_root, args.model_name)
@@ -55,4 +56,3 @@ def params_setup(cmdline=None):
   args.results_dir = '%s/results' % args.workspace
   args.tf_board_dir = '%s/tf_board' % args.workspace
   return args
-
