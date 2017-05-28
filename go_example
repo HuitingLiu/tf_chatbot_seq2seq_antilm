@@ -18,8 +18,7 @@ fi
 # $PY3 main.py --mode train --model_name example --vocab_size 100000 --size 128 > "./logs/seq2seq_twitter_en_$NOW.log" &
 
 # 2. chat interactively in command line
-python3 main.py --mode chat --model_name example --vocab_size 100000 --size 128  # --beam_size 5 --antilm 0.7
+python3 main.py --mode chat --model_name example --vocab_size 100000 --size 128 --beam_size 5 --antilm 0.7
 
 # 3. do batch output test
 # python3 main.py --mode test --model_name example --vocab_size 100000 --size 128 --beam_size 5 --antilm 0.7
-

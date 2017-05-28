@@ -15,6 +15,10 @@ def chat(args):
 
     # Load vocabularies.
     vocab_path = os.path.join(args.data_dir, "vocab%d.in" % args.vocab_size)
+    '''
+    the vocabulary (a dictionary mapping string to integers), and
+    the reversed vocabulary (a list, which reverses the vocabulary mapping)
+    '''
     vocab, rev_vocab = data_utils.initialize_vocabulary(vocab_path)
 
     # Decode from standard input.
@@ -30,8 +34,7 @@ def chat(args):
                 print("  (%s) -> %s" % (sent['prob'], sent['dec_inp']))
         else:
             print(sentence, ' -> ', predicted_sentence)
-            
+
         sys.stdout.write("> ")
         sys.stdout.flush()
         sentence = sys.stdin.readline()
-

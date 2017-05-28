@@ -46,6 +46,8 @@ def create_model(session, args, forward_only=True):
 
 
 def dict_lookup(rev_vocab, out):
+    if args.beam_size > 1:
+        out = out[0]
     word = rev_vocab[out] if (out < len(rev_vocab)) else data_utils._UNK
     if isinstance(word, bytes):
       word = word.decode()
@@ -109,7 +111,7 @@ def get_predicted_sentence(args, input_sentence, vocab, rev_vocab, model, sess, 
     dummy_encoder_inputs = [np.array([data_utils.PAD_ID]) for _ in range(len(encoder_inputs))]
 
     for dptr in range(len(decoder_inputs)-1):
-      if dptr > 0: 
+      if dptr > 0:
         target_weights[dptr] = [1.]
         beams, new_beams = new_beams[:args.beam_size], []
       if debug: print("=====[beams]=====", beams)
