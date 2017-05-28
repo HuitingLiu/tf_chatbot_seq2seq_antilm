@@ -45,7 +45,7 @@ def create_model(session, args, forward_only=True):
   return model
 
 
-def dict_lookup(rev_vocab, out, beam_size):
+def dict_lookup(rev_vocab, out):
     word = rev_vocab[out] if (out < len(rev_vocab)) else data_utils._UNK
     if isinstance(word, bytes):
       word = word.decode()
